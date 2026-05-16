@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../models/AdminDashboardModel.php';
+require_once __DIR__ . '/../models/AdminCarModel.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -8,10 +9,12 @@ if (session_status() === PHP_SESSION_NONE) {
 class AdminController
 {
     private $dashboardModel;
+    private $carModel;
 
     public function __construct()
     {
         $this->dashboardModel = new AdminDashboardModel();
+        $this->carModel = new AdminCarModel();
     }
 
     private function requireAdmin()
@@ -19,8 +22,8 @@ class AdminController
         $role = $_SESSION['user_role'] ?? $_SESSION['role'] ?? null;
 
         if ($role !== 'admin') {
-           echo "Access denied. Please login as admin to view this page.";
-           exit();
+            echo "Access denied. Please login as admin to view this page.";
+            exit();
         }
     }
 
@@ -35,13 +38,40 @@ class AdminController
 
         require_once __DIR__ . '/../views/admin/dashboard.php';
     }
+
+    public function cars()
+    {
+        $this->requireAdmin();
+
+        $cars = $this->carModel->getAllCars();
+
+        require_once __DIR__ . '/../views/admin/cars.php';
+    }
 }
 
-$action = $_GET['action'] ?? 'dashboard';
+$route = $_GET['controller'] ?? 'adminDashboard';
+$action = $_GET['action'] ?? null;
+
+if ($action === null) {
+    switch ($route) {
+        case 'adminCars':
+            $action = 'cars';
+            break;
+
+        case 'adminDashboard':
+        default:
+            $action = 'dashboard';
+            break;
+    }
+}
 
 $controller = new AdminController();
 
 switch ($action) {
+    case 'cars':
+        $controller->cars();
+        break;
+
     case 'dashboard':
     default:
         $controller->dashboard();
