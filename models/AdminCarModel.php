@@ -19,5 +19,25 @@ class AdminCarModel
 
         return $stmt->fetchAll();
     }
+
+    public function createCar($data)
+    {
+        $sql = "INSERT INTO cars 
+                (name, model, type, price_per_day, availability_status, image_path, description) 
+                VALUES 
+                (:name, :model, :type, :price_per_day, :availability_status, :image_path, :description)";
+
+        $stmt = $this->conn->prepare($sql);
+
+        return $stmt->execute([
+            ':name' => $data['name'],
+            ':model' => $data['model'],
+            ':type' => $data['type'],
+            ':price_per_day' => $data['price_per_day'],
+            ':availability_status' => $data['availability_status'],
+            ':image_path' => $data['image_path'],
+            ':description' => $data['description']
+        ]);
+    }
 }
 ?>

@@ -16,7 +16,6 @@
         <a href="index.php?controller=adminCars">Car Management</a>
         <a href="index.php?controller=adminMembers">Members</a>
         <a href="index.php?controller=adminOrders">Rent Orders</a>
-        <a href="index.php?controller=blog">Blog</a>
     </aside>
 
     <main class="main-content">
@@ -31,11 +30,16 @@
             </a>
         </div>
 
+        <?php if (!empty($_GET['success']) && $_GET['success'] === 'created'): ?>
+            <div class="alert-success">Car added successfully.</div>
+        <?php endif; ?>
+
         <div class="table-card">
             <table class="admin-table">
                 <thead>
                     <tr>
                         <th>ID</th>
+                        <th>Image</th>
                         <th>Car Name</th>
                         <th>Model</th>
                         <th>Type</th>
@@ -52,6 +56,13 @@
                         <?php foreach ($cars as $car): ?>
                             <tr>
                                 <td><?php echo htmlspecialchars($car['id']); ?></td>
+                                <td>
+                                    <?php if (!empty($car['image_path'])): ?>
+                                        <img class="car-thumb" src="<?php echo htmlspecialchars($car['image_path']); ?>" alt="Car Image">
+                                    <?php else: ?>
+                                        No image
+                                    <?php endif; ?>
+                                </td>
                                 <td><?php echo htmlspecialchars($car['name']); ?></td>
                                 <td><?php echo htmlspecialchars($car['model']); ?></td>
                                 <td><?php echo htmlspecialchars($car['type']); ?></td>
@@ -67,7 +78,7 @@
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="9" class="text-center">No cars found.</td>
+                            <td colspan="10" class="text-center">No cars found.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
