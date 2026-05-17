@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../models/AdminDashboardModel.php';
 require_once __DIR__ . '/../models/AdminCarModel.php';
+require_once __DIR__ . '/../models/AdminMemberModel.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -10,11 +11,13 @@ class AdminController
 {
     private $dashboardModel;
     private $carModel;
+    private $memberModel;
 
     public function __construct()
     {
         $this->dashboardModel = new AdminDashboardModel();
         $this->carModel = new AdminCarModel();
+        $this->memberModel = new AdminMemberModel();
     }
 
     private function requireAdmin()
@@ -343,6 +346,75 @@ public function updateCar()
     header("Location: index.php?controller=adminCars&success=deleted");
     exit();
 }
+
+    public function members()
+{
+    $this->requireAdmin();
+
+    $members = $this->memberModel->getAllMembers();
+    $csrfToken = $this->generateCsrfToken();
+
+    require_once __DIR__ . '/../views/admin/members.php';
+}
+
+public function deleteMember()
+{
+    $this->requireAdmin();
+
+    header('Content-Type: application/json');
+
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Invalid request method.'
+        ]);
+        exit();
+    }
+
+    if (!$this->isValidCsrfToken()) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Invalid security token. Please refresh and try again.'
+        ]);
+        exit();
+    }
+
+    $id = $_POST['id'] ?? null;
+
+    if (!$id || !is_numeric($id)) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Invalid member ID.'
+        ]);
+        exit();
+    }
+
+    $member = $this->memberModel->getMemberById($id);
+
+    if (!$member) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Member not found.'
+        ]);
+        exit();
+    }
+
+    $deleted = $this->memberModel->deleteMember($id);
+
+    if ($deleted) {
+        echo json_encode([
+            'success' => true,
+            'message' => 'Member deleted successfully.'
+        ]);
+        exit();
+    }
+
+    echo json_encode([
+        'success' => false,
+        'message' => 'Could not delete member. Please try again.'
+    ]);
+    exit();
+}
 }
 
 $route = $_GET['controller'] ?? 'adminDashboard';
@@ -352,6 +424,10 @@ if ($action === null) {
     switch ($route) {
         case 'adminCars':
             $action = 'cars';
+            break;
+
+        case 'adminMembers':
+            $action = 'members';
             break;
 
         case 'adminDashboard':
@@ -386,7 +462,15 @@ switch ($action) {
 
     case 'deleteCar':
     $controller->deleteCar();
-    break;    
+    break;
+    
+    case 'members':
+    $controller->members();
+    break;
+
+case 'deleteMember':
+    $controller->deleteMember();
+    break;
 
     case 'dashboard':
     default:
