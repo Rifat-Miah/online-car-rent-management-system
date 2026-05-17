@@ -34,6 +34,10 @@
             <div class="alert-success">Car added successfully.</div>
         <?php endif; ?>
 
+        <?php if (!empty($_GET['success']) && $_GET['success'] === 'updated'): ?>
+            <div class="alert-success">Car updated successfully.</div>
+        <?php endif; ?>
+
         <div class="table-card">
             <table class="admin-table">
                 <thead>

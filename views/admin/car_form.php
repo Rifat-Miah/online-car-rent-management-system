@@ -93,13 +93,22 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Car Image</label>
-                    <input type="file" name="image" accept="image/jpeg,image/png">
-                    <small>Allowed: JPG or PNG, maximum 2MB.</small>
-                    <?php if (!empty($errors['image'])): ?>
-                        <small class="error-text"><?php echo htmlspecialchars($errors['image']); ?></small>
-                    <?php endif; ?>
-                </div>
+    <label>Car Image</label>
+
+    <?php if (!empty($car['image_path'])): ?>
+        <div class="current-image-box">
+            <p>Current Image:</p>
+            <img class="current-car-image" src="<?php echo htmlspecialchars($car['image_path']); ?>" alt="Current Car Image">
+        </div>
+    <?php endif; ?>
+
+    <input type="file" name="image" accept="image/jpeg,image/png">
+    <small>Allowed: JPG or PNG, maximum 2MB.</small>
+
+    <?php if (!empty($errors['image'])): ?>
+        <small class="error-text"><?php echo htmlspecialchars($errors['image']); ?></small>
+    <?php endif; ?>
+</div>
 
                 <div class="form-group">
                     <label>Description</label>

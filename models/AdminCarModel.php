@@ -20,6 +20,17 @@ class AdminCarModel
         return $stmt->fetchAll();
     }
 
+    public function getCarById($id)
+    {
+        $sql = "SELECT * FROM cars WHERE id = :id";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([
+            ':id' => $id
+        ]);
+
+        return $stmt->fetch();
+    }
+
     public function createCar($data)
     {
         $sql = "INSERT INTO cars 
@@ -37,6 +48,33 @@ class AdminCarModel
             ':availability_status' => $data['availability_status'],
             ':image_path' => $data['image_path'],
             ':description' => $data['description']
+        ]);
+    }
+
+    public function updateCar($id, $data)
+    {
+        $sql = "UPDATE cars 
+                SET 
+                    name = :name,
+                    model = :model,
+                    type = :type,
+                    price_per_day = :price_per_day,
+                    availability_status = :availability_status,
+                    image_path = :image_path,
+                    description = :description
+                WHERE id = :id";
+
+        $stmt = $this->conn->prepare($sql);
+
+        return $stmt->execute([
+            ':name' => $data['name'],
+            ':model' => $data['model'],
+            ':type' => $data['type'],
+            ':price_per_day' => $data['price_per_day'],
+            ':availability_status' => $data['availability_status'],
+            ':image_path' => $data['image_path'],
+            ':description' => $data['description'],
+            ':id' => $id
         ]);
     }
 }

@@ -208,6 +208,98 @@ class AdminController
         header("Location: index.php?controller=adminCars&success=created");
         exit();
     }
+
+    public function editCar()
+{
+    $this->requireAdmin();
+
+    $id = $_GET['id'] ?? null;
+
+    if (!$id || !is_numeric($id)) {
+        header("Location: index.php?controller=adminCars&error=invalid");
+        exit();
+    }
+
+    $car = $this->carModel->getCarById($id);
+
+    if (!$car) {
+        header("Location: index.php?controller=adminCars&error=notfound");
+        exit();
+    }
+
+    $errors = [];
+    $formTitle = 'Edit Car';
+    $formAction = 'index.php?controller=adminCars&action=updateCar&id=' . urlencode($id);
+    $csrfToken = $this->generateCsrfToken();
+
+    require_once __DIR__ . '/../views/admin/car_form.php';
+}
+
+public function updateCar()
+{
+    $this->requireAdmin();
+
+    $id = $_GET['id'] ?? null;
+
+    if (!$id || !is_numeric($id)) {
+        header("Location: index.php?controller=adminCars&error=invalid");
+        exit();
+    }
+
+    $existingCar = $this->carModel->getCarById($id);
+
+    if (!$existingCar) {
+        header("Location: index.php?controller=adminCars&error=notfound");
+        exit();
+    }
+
+    $errors = [];
+
+    if (!$this->isValidCsrfToken()) {
+        $errors['general'] = 'Invalid form request. Please try again.';
+    }
+
+    $car = [
+        'id' => $id,
+        'name' => trim($_POST['name'] ?? ''),
+        'model' => trim($_POST['model'] ?? ''),
+        'type' => $_POST['type'] ?? '',
+        'price_per_day' => $_POST['price_per_day'] ?? '',
+        'availability_status' => $_POST['availability_status'] ?? 'available',
+        'description' => trim($_POST['description'] ?? ''),
+        'image_path' => $existingCar['image_path'] ?? null
+    ];
+
+    $errors = array_merge($errors, $this->validateCarInput($car));
+
+    $newImagePath = $this->uploadCarImage($errors);
+
+    if ($newImagePath !== null) {
+        if (!empty($existingCar['image_path'])) {
+            $oldImageFullPath = __DIR__ . '/../' . $existingCar['image_path'];
+
+            if (file_exists($oldImageFullPath)) {
+                unlink($oldImageFullPath);
+            }
+        }
+
+        $car['image_path'] = $newImagePath;
+    }
+
+    if (!empty($errors)) {
+        $formTitle = 'Edit Car';
+        $formAction = 'index.php?controller=adminCars&action=updateCar&id=' . urlencode($id);
+        $csrfToken = $this->generateCsrfToken();
+
+        require_once __DIR__ . '/../views/admin/car_form.php';
+        return;
+    }
+
+    $this->carModel->updateCar($id, $car);
+
+    header("Location: index.php?controller=adminCars&success=updated");
+    exit();
+}
 }
 
 $route = $_GET['controller'] ?? 'adminDashboard';
@@ -239,6 +331,14 @@ switch ($action) {
 
     case 'storeCar':
         $controller->storeCar();
+        break;
+
+    case 'editCar':
+        $controller->editCar();
+        break;
+
+    case 'updateCar':
+        $controller->updateCar();
         break;
 
     case 'dashboard':
