@@ -65,7 +65,7 @@ body {
     background: white;
     padding: 25px;
     border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .card h3 {
@@ -124,7 +124,7 @@ body {
     background: white;
     padding: 18px;
     border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     overflow-x: auto;
 }
 
@@ -169,7 +169,7 @@ body {
     background: white;
     padding: 25px;
     border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     max-width: 700px;
 }
 
@@ -256,4 +256,13 @@ body {
     object-fit: cover;
     border-radius: 8px;
     border: 1px solid #ddd;
+}
+
+.inline-form {
+    display: inline-block;
+}
+
+.inline-form button {
+    border: none;
+    cursor: pointer;
 }

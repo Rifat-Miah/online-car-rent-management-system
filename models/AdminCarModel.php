@@ -77,5 +77,32 @@ class AdminCarModel
             ':id' => $id
         ]);
     }
+
+    public function carHasActiveOrders($id)
+{
+    $sql = "SELECT COUNT(*) AS total 
+            FROM orders 
+            WHERE car_id = :id 
+            AND status IN ('pending', 'confirmed')";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->execute([
+        ':id' => $id
+    ]);
+
+    $result = $stmt->fetch();
+
+    return $result['total'] > 0;
+}
+
+public function deleteCar($id)
+{
+    $sql = "DELETE FROM cars WHERE id = :id";
+    $stmt = $this->conn->prepare($sql);
+
+    return $stmt->execute([
+        ':id' => $id
+    ]);
+}
 }
 ?>

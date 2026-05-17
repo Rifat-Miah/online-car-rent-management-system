@@ -38,6 +38,22 @@
             <div class="alert-success">Car updated successfully.</div>
         <?php endif; ?>
 
+        <?php if (!empty($_GET['success']) && $_GET['success'] === 'deleted'): ?>
+    <div class="alert-success">Car deleted successfully.</div>
+<?php endif; ?>
+
+<?php if (!empty($_GET['error']) && $_GET['error'] === 'active_orders'): ?>
+    <div class="alert-error">This car cannot be deleted because it has pending or confirmed orders.</div>
+<?php endif; ?>
+
+<?php if (!empty($_GET['error']) && $_GET['error'] === 'csrf'): ?>
+    <div class="alert-error">Invalid delete request. Please try again.</div>
+<?php endif; ?>
+
+<?php if (!empty($_GET['error']) && $_GET['error'] === 'notfound'): ?>
+    <div class="alert-error">Car not found.</div>
+<?php endif; ?>
+
         <div class="table-card">
             <table class="admin-table">
                 <thead>
@@ -76,7 +92,10 @@
                                 <td><?php echo htmlspecialchars($car['created_at']); ?></td>
                                 <td>
                                     <a class="btn-small" href="index.php?controller=adminCars&action=editCar&id=<?php echo $car['id']; ?>">Edit</a>
-                                    <a class="btn-small btn-danger" href="index.php?controller=adminCars&action=deleteCar&id=<?php echo $car['id']; ?>">Delete</a>
+                                    <form class="inline-form" action="index.php?controller=adminCars&action=deleteCar&id=<?php echo htmlspecialchars($car['id']); ?>" method="POST" onsubmit="return confirm('Are you sure you want to delete this car?');">
+    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken); ?>">
+    <button type="submit" class="btn-small btn-danger">Delete</button>
+</form>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

@@ -144,8 +144,9 @@ class AdminController
         $this->requireAdmin();
 
         $cars = $this->carModel->getAllCars();
+$csrfToken = $this->generateCsrfToken();
 
-        require_once __DIR__ . '/../views/admin/cars.php';
+require_once __DIR__ . '/../views/admin/cars.php';
     }
 
     public function createCar()
@@ -300,6 +301,48 @@ public function updateCar()
     header("Location: index.php?controller=adminCars&success=updated");
     exit();
 }
+    
+   public function deleteCar()
+{
+    $this->requireAdmin();
+
+    $id = $_GET['id'] ?? null;
+
+    if (!$id || !is_numeric($id)) {
+        header("Location: index.php?controller=adminCars&error=invalid");
+        exit();
+    }
+
+    if (!$this->isValidCsrfToken()) {
+        header("Location: index.php?controller=adminCars&error=csrf");
+        exit();
+    }
+
+    $car = $this->carModel->getCarById($id);
+
+    if (!$car) {
+        header("Location: index.php?controller=adminCars&error=notfound");
+        exit();
+    }
+
+    if ($this->carModel->carHasActiveOrders($id)) {
+        header("Location: index.php?controller=adminCars&error=active_orders");
+        exit();
+    }
+
+    $deleted = $this->carModel->deleteCar($id);
+
+    if ($deleted && !empty($car['image_path'])) {
+        $imageFullPath = __DIR__ . '/../' . $car['image_path'];
+
+        if (file_exists($imageFullPath)) {
+            unlink($imageFullPath);
+        }
+    }
+
+    header("Location: index.php?controller=adminCars&success=deleted");
+    exit();
+}
 }
 
 $route = $_GET['controller'] ?? 'adminDashboard';
@@ -340,6 +383,10 @@ switch ($action) {
     case 'updateCar':
         $controller->updateCar();
         break;
+
+    case 'deleteCar':
+    $controller->deleteCar();
+    break;    
 
     case 'dashboard':
     default:
