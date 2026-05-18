@@ -5,7 +5,7 @@ class Blog {
     private $db;
     
     public function __construct() {
-        $this->db = Database::getInstance()->getConnection();
+        $this->db = connectDB(); // Using MySQLi connection
     }
     
     public function getAllPosts($limit = null, $offset = null, $search = '') {
@@ -14,9 +14,8 @@ class Blog {
                     FROM blogs b 
                     LEFT JOIN users u ON b.user_id = u.id";
             
-            // Add search condition if search term is provided - CASE INSENSITIVE
             if (!empty($search)) {
-                $sql .= " WHERE (LOWER(b.title) LIKE LOWER(?) OR LOWER(b.content) LIKE LOWER(?))";
+                $sql .= " WHERE (LOWER(b.title) LIKE LOWER('%{$search}%') OR LOWER(b.content) LIKE LOWER('%{$search}%'))";
             }
             
             $sql .= " ORDER BY b.created_at DESC";
@@ -27,176 +26,162 @@ class Blog {
                 $sql .= " LIMIT " . (int)$limit;
             }
             
-            $stmt = $this->db->prepare($sql);
+            $result = mysqli_query($this->db, $sql);
             
-            if (!empty($search)) {
-                $searchParam = '%' . $search . '%';
-                $stmt->execute([$searchParam, $searchParam]);
-            } else {
-                $stmt->execute();
+            if (!$result) {
+                return [];
             }
             
-            $result = $stmt->fetchAll();
-            
-            // Calculate dynamic read counts and image paths
-            foreach ($result as &$post) {
-                $post['read_count'] = $this->calculateReadCount($post['created_at'], $post['id']);
-                $post['image_path'] = $this->getPostImage($post['id']);
+            $posts = [];
+            while ($row = mysqli_fetch_assoc($result)) {
+                $row['read_count'] = $this->calculateReadCount($row['created_at'], $row['id']);
+                $row['image_path'] = $this->getPostImage($row['id']);
+                $posts[] = $row;
             }
             
-            return $result ?: [];
-        } catch (PDOException $e) {
+            return $posts;
+        } catch (Exception $e) {
             error_log("Database error in getAllPosts: " . $e->getMessage());
             return [];
         }
     }
     
     public function getTotalCount($search = '') {
-        try {
-            $sql = "SELECT COUNT(*) as total FROM blogs";
-            
-            if (!empty($search)) {
-                $sql .= " WHERE (LOWER(title) LIKE LOWER(?) OR LOWER(content) LIKE LOWER(?))";
-            }
-            
-            $stmt = $this->db->prepare($sql);
-            
-            if (!empty($search)) {
-                $searchParam = '%' . $search . '%';
-                $stmt->execute([$searchParam, $searchParam]);
-            } else {
-                $stmt->execute();
-            }
-            
-            $result = $stmt->fetch();
-            return $result ? (int)$result['total'] : 0;
-        } catch (PDOException $e) {
-            error_log("Database error in getTotalCount: " . $e->getMessage());
+        $sql = "SELECT COUNT(*) as total FROM blogs";
+        
+        if (!empty($search)) {
+            $sql .= " WHERE (LOWER(title) LIKE LOWER('%{$search}%') OR LOWER(content) LIKE LOWER('%{$search}%'))";
+        }
+        
+        $result = mysqli_query($this->db, $sql);
+        
+        if (!$result) {
             return 0;
         }
+        
+        $row = mysqli_fetch_assoc($result);
+        return $row ? (int)$row['total'] : 0;
     }
     
     public function getPostById($id) {
-        try {
-            $sql = "SELECT b.*, u.name as author_name, u.role as author_role
-                    FROM blogs b 
-                    LEFT JOIN users u ON b.user_id = u.id 
-                    WHERE b.id = ?";
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute([$id]);
-            $result = $stmt->fetch();
-            
-            if ($result) {
-                $result['read_count'] = $this->calculateReadCount($result['created_at'], $id);
-                $result['image_path'] = $this->getPostImage($id);
-            }
-            
-            return $result;
-        } catch (PDOException $e) {
-            error_log("Database error in getPostById: " . $e->getMessage());
+        $id = (int)$id;
+        $sql = "SELECT b.*, u.name as author_name, u.role as author_role
+                FROM blogs b 
+                LEFT JOIN users u ON b.user_id = u.id 
+                WHERE b.id = $id";
+        
+        $result = mysqli_query($this->db, $sql);
+        
+        if (!$result) {
             return null;
         }
+        
+        $post = mysqli_fetch_assoc($result);
+        
+        if ($post) {
+            $post['read_count'] = $this->calculateReadCount($post['created_at'], $id);
+            $post['image_path'] = $this->getPostImage($id);
+        }
+        
+        return $post;
     }
     
     public function createPost($userId, $title, $content) {
-        try {
-            $sql = "INSERT INTO blogs (user_id, title, content, created_at) 
-                    VALUES (?, ?, ?, NOW())";
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute([$userId, $title, $content]);
-            return $this->db->lastInsertId();
-        } catch (PDOException $e) {
-            error_log("Database error in createPost: " . $e->getMessage());
-            return false;
+        $userId = (int)$userId;
+        $title = mysqli_real_escape_string($this->db, $title);
+        $content = mysqli_real_escape_string($this->db, $content);
+        
+        $sql = "INSERT INTO blogs (user_id, title, content, created_at) 
+                VALUES ($userId, '$title', '$content', NOW())";
+        
+        if (mysqli_query($this->db, $sql)) {
+            return mysqli_insert_id($this->db);
         }
+        
+        return false;
     }
     
     public function deletePost($id, $userId = null) {
-        try {
-            $this->deletePostImage($id);
-            
-            if ($userId !== null) {
-                $sql = "DELETE FROM blogs WHERE id = ? AND user_id = ?";
-                $stmt = $this->db->prepare($sql);
-                return $stmt->execute([$id, $userId]);
-            } else {
-                $sql = "DELETE FROM blogs WHERE id = ?";
-                $stmt = $this->db->prepare($sql);
-                return $stmt->execute([$id]);
-            }
-        } catch (PDOException $e) {
-            error_log("Database error in deletePost: " . $e->getMessage());
-            return false;
+        $id = (int)$id;
+        $this->deletePostImage($id);
+        
+        if ($userId !== null) {
+            $userId = (int)$userId;
+            $sql = "DELETE FROM blogs WHERE id = $id AND user_id = $userId";
+        } else {
+            $sql = "DELETE FROM blogs WHERE id = $id";
         }
+        
+        return mysqli_query($this->db, $sql);
     }
     
     public function getPopularPosts($limit = 3) {
-        try {
-            $sql = "SELECT b.*, u.name as author_name, u.role as author_role
-                    FROM blogs b 
-                    LEFT JOIN users u ON b.user_id = u.id 
-                    ORDER BY b.created_at DESC 
-                    LIMIT " . (int)$limit;
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute();
-            $result = $stmt->fetchAll();
-            
-            foreach ($result as &$post) {
-                $post['read_count'] = $this->calculateReadCount($post['created_at'], $post['id']);
-                $post['image_path'] = $this->getPostImage($post['id']);
-            }
-            
-            usort($result, function($a, $b) {
-                return $b['read_count'] - $a['read_count'];
-            });
-            
-            return $result ?: [];
-        } catch (PDOException $e) {
-            error_log("Database error in getPopularPosts: " . $e->getMessage());
+        $limit = (int)$limit;
+        $sql = "SELECT b.*, u.name as author_name, u.role as author_role
+                FROM blogs b 
+                LEFT JOIN users u ON b.user_id = u.id 
+                ORDER BY b.created_at DESC 
+                LIMIT $limit";
+        
+        $result = mysqli_query($this->db, $sql);
+        
+        if (!$result) {
             return [];
         }
+        
+        $posts = [];
+        while ($row = mysqli_fetch_assoc($result)) {
+            $row['read_count'] = $this->calculateReadCount($row['created_at'], $row['id']);
+            $row['image_path'] = $this->getPostImage($row['id']);
+            $posts[] = $row;
+        }
+        
+        // Sort by read count descending
+        usort($posts, function($a, $b) {
+            return $b['read_count'] - $a['read_count'];
+        });
+        
+        return $posts;
     }
     
     public function getPostCount() {
-        try {
-            $stmt = $this->db->prepare("SELECT COUNT(*) as total FROM blogs");
-            $stmt->execute();
-            $result = $stmt->fetch();
-            return $result ? (int)$result['total'] : 0;
-        } catch (PDOException $e) {
-            error_log("Database error in getPostCount: " . $e->getMessage());
+        $sql = "SELECT COUNT(*) as total FROM blogs";
+        $result = mysqli_query($this->db, $sql);
+        
+        if (!$result) {
             return 0;
         }
+        
+        $row = mysqli_fetch_assoc($result);
+        return $row ? (int)$row['total'] : 0;
     }
     
     public function getAuthorCount() {
-        try {
-            $stmt = $this->db->prepare("SELECT COUNT(DISTINCT user_id) as total FROM blogs");
-            $stmt->execute();
-            $result = $stmt->fetch();
-            return $result ? (int)$result['total'] : 0;
-        } catch (PDOException $e) {
-            error_log("Database error in getAuthorCount: " . $e->getMessage());
+        $sql = "SELECT COUNT(DISTINCT user_id) as total FROM blogs";
+        $result = mysqli_query($this->db, $sql);
+        
+        if (!$result) {
             return 0;
         }
+        
+        $row = mysqli_fetch_assoc($result);
+        return $row ? (int)$row['total'] : 0;
     }
     
     public function getTotalReads() {
-        try {
-            $stmt = $this->db->prepare("SELECT id, created_at FROM blogs");
-            $stmt->execute();
-            $posts = $stmt->fetchAll();
-            
-            $totalReads = 0;
-            foreach ($posts as $post) {
-                $totalReads += $this->calculateReadCount($post['created_at'], $post['id']);
-            }
-            
-            return $totalReads;
-        } catch (PDOException $e) {
-            error_log("Database error in getTotalReads: " . $e->getMessage());
+        $sql = "SELECT id, created_at FROM blogs";
+        $result = mysqli_query($this->db, $sql);
+        
+        if (!$result) {
             return 0;
         }
+        
+        $totalReads = 0;
+        while ($row = mysqli_fetch_assoc($result)) {
+            $totalReads += $this->calculateReadCount($row['created_at'], $row['id']);
+        }
+        
+        return $totalReads;
     }
     
     private function calculateReadCount($createdAt, $postId) {
