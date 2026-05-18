@@ -1,16 +1,25 @@
 <?php
-// Start session if not already started
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+session_start();
+
+
+if (!isset($_SESSION['user_id'])) {
+    $_SESSION['user_id'] = 1; 
+    $_SESSION['user_name'] = 'Test Member';
+    $_SESSION['user_role'] = 'member';
 }
 
-// Get the controller from URL parameter
-$controller = isset($_GET['controller']) ? $_GET['controller'] : 'blog';
+$controller = isset($_GET['controller']) ? $_GET['controller'] : 'cars';
+$action = isset($_GET['action']) ? $_GET['action'] : 'index';
 
-// Route to appropriate controller
-if ($controller === 'blog') {
-    require_once __DIR__ . '/controllers/BlogController.php';
+if ($controller === 'cars') {
+    require_once 'controllers/carController.php';
+} elseif ($controller === 'order') {
+    require_once 'controllers/orderController.php';
+} elseif ($controller === 'invoice') {
+    require_once 'controllers/invoiceController.php';
+} elseif ($controller === 'history') {
+    require_once 'controllers/historyController.php';
 } else {
-    require_once __DIR__ . '/controllers/BlogController.php';
+    echo "404 Not Found";
 }
 ?>
