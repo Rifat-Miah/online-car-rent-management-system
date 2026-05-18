@@ -14,7 +14,7 @@
 
         <div class="car-image-box">
             <?php if (!empty($car['image_path'])): ?>
-                <img src="public/uploads/cars/<?= htmlspecialchars($car['image_path']) ?>" alt="<?= htmlspecialchars($car['name']) ?>">
+                <img src="assets/public/uploads/cars/<?= htmlspecialchars($car['image_path']) ?>" alt="<?= htmlspecialchars($car['name']) ?>">
             <?php else: ?>
                 <span class="no-image">No Image Available</span>
             <?php endif; ?>

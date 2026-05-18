@@ -9,9 +9,14 @@ $order = getOrderById($order_id);
 
 if (!$order || $order['user_id'] !== $_SESSION['user_id']) die("Access denied.");
 
-if ($action === 'cancel') {
-    updateOrderStatus($order_id, 'cancelled');
-    header("Location: index.php?controller=history&msg=cancelled");
+
+if ($action === 'cancel' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    header('Content-Type: application/json');
+    if (updateOrderStatus($order_id, 'cancelled')) {
+        echo json_encode(['success' => true]);
+    } else {
+        echo json_encode(['success' => false, 'error' => 'Could not cancel order.']);
+    }
     exit();
 }
 
