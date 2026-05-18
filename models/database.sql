@@ -18,7 +18,7 @@ CREATE TABLE cars (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     model VARCHAR(100) NOT NULL,
-    type ENUM('Private car','Microbus','Pic-kUp','SUV','Van','Sedan') NOT NULL,
+    type ENUM('Private car','Microbus','PickUp','SUV','Van','Sedan') NOT NULL,
     price_per_day DECIMAL(10,2) NOT NULL,
     availability_status ENUM('available','unavailable') DEFAULT 'available',
     image_path VARCHAR(255) DEFAULT NULL,
