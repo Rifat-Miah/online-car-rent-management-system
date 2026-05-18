@@ -11,7 +11,7 @@ class AdminOrderModel
         $this->conn = $database->getConnection();
     }
 
-    public function getAllOrders()
+    public function getOrders($filters = [])
     {
         $sql = "SELECT 
                     orders.id,
@@ -29,10 +29,29 @@ class AdminOrderModel
                 FROM orders
                 LEFT JOIN users ON orders.user_id = users.id
                 LEFT JOIN cars ON orders.car_id = cars.id
-                ORDER BY orders.order_date DESC";
+                WHERE 1=1";
+
+        $params = [];
+
+        if (!empty($filters['status'])) {
+            $sql .= " AND orders.status = :status";
+            $params[':status'] = $filters['status'];
+        }
+
+        if (!empty($filters['from_date'])) {
+            $sql .= " AND DATE(orders.order_date) >= :from_date";
+            $params[':from_date'] = $filters['from_date'];
+        }
+
+        if (!empty($filters['to_date'])) {
+            $sql .= " AND DATE(orders.order_date) <= :to_date";
+            $params[':to_date'] = $filters['to_date'];
+        }
+
+        $sql .= " ORDER BY orders.order_date DESC";
 
         $stmt = $this->conn->prepare($sql);
-        $stmt->execute();
+        $stmt->execute($params);
 
         return $stmt->fetchAll();
     }

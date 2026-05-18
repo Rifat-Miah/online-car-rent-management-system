@@ -423,7 +423,27 @@ require_once __DIR__ . '/../views/admin/cars.php';
     {
     $this->requireAdmin();
 
-    $orders = $this->orderModel->getAllOrders();
+    $allowedStatuses = ['pending', 'confirmed', 'cancelled'];
+
+    $filters = [
+        'status' => '',
+        'from_date' => '',
+        'to_date' => ''
+    ];
+
+    if (!empty($_GET['status']) && in_array($_GET['status'], $allowedStatuses)) {
+        $filters['status'] = $_GET['status'];
+    }
+
+    if (!empty($_GET['from_date'])) {
+        $filters['from_date'] = $_GET['from_date'];
+    }
+
+    if (!empty($_GET['to_date'])) {
+        $filters['to_date'] = $_GET['to_date'];
+    }
+
+    $orders = $this->orderModel->getOrders($filters);
 
     require_once __DIR__ . '/../views/admin/orders.php';
     }

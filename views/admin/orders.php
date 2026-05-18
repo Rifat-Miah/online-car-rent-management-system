@@ -26,6 +26,37 @@
             </div>
         </div>
 
+        <div class="filter-card">
+    <form method="GET" action="index.php" class="filter-form">
+        <input type="hidden" name="controller" value="adminOrders">
+
+        <div class="filter-group">
+            <label>Status</label>
+            <select name="status">
+                <option value="">All Status</option>
+                <option value="pending" <?php echo ($filters['status'] === 'pending') ? 'selected' : ''; ?>>Pending</option>
+                <option value="confirmed" <?php echo ($filters['status'] === 'confirmed') ? 'selected' : ''; ?>>Confirmed</option>
+                <option value="cancelled" <?php echo ($filters['status'] === 'cancelled') ? 'selected' : ''; ?>>Cancelled</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label>From Date</label>
+            <input type="date" name="from_date" value="<?php echo htmlspecialchars($filters['from_date']); ?>">
+        </div>
+
+        <div class="filter-group">
+            <label>To Date</label>
+            <input type="date" name="to_date" value="<?php echo htmlspecialchars($filters['to_date']); ?>">
+        </div>
+
+        <div class="filter-actions">
+            <button type="submit" class="btn-submit">Filter</button>
+            <a href="index.php?controller=adminOrders" class="btn-reset">Reset</a>
+        </div>
+    </form>
+</div>
+
         <div class="table-card">
             <table class="admin-table">
                 <thead>
