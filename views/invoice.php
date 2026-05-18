@@ -54,7 +54,7 @@
                 <button type="submit" class="btn-pay">Finalize & Pay</button>
             </form>
             
-            <button id="ajaxCancelBtn" data-id="<?= (int)$order['id'] ?>" class="btn-cancel-ajax">Cancel Order</button>
+            <button type="button" id="ajaxCancelBtn" data-id="<?= (int)$order['id'] ?>" class="btn-cancel-ajax">Cancel Order</button>
             
         <?php else: ?>
             <div style="margin: 20px 0; padding: 10px; background-color: #f8f9fa; border-radius: 5px; text-align: center;">
@@ -65,41 +65,38 @@
     </div>
 
     <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const cancelBtn = document.getElementById('ajaxCancelBtn');
-        
-        if (cancelBtn) {
-            cancelBtn.addEventListener('click', function (e) {
-                e.preventDefault();
+    const cancelBtn = document.getElementById('ajaxCancelBtn');
+    
+    if (cancelBtn) {
+        cancelBtn.onclick = function(e) {
+            e.preventDefault();
+            
+            if (confirm('Are you sure you want to cancel and delete this order?')) {
+                const orderId = cancelBtn.getAttribute('data-id');
                 
-                if (confirm('Are you sure you want to cancel this order?')) {
-                    const orderId = this.getAttribute('data-id');
-                    
-                    
-                    fetch('index.php?controller=invoice&action=cancel&id=' + orderId, {
-                        method: 'POST'
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            
-                            document.querySelector('.container').innerHTML = `
-                                <h2 style="color: #d90429; margin-bottom: 15px;">Order Cancelled</h2>
-                                <p style="margin-bottom: 25px; line-height: 1.6;">Your vehicle rental transaction matching <strong>Order #${orderId}</strong> was successfully voided.</p>
-                                <a href="index.php?controller=cars" class="btn-pay" style="display: block; text-align: center; text-decoration: none; box-sizing: border-box;">Return to Car Directory</a>
-                            `;
-                        } else {
-                            alert('Cancellation Processing Failure: ' + (data.error || 'Unknown Error'));
-                        }
-                    })
-                    .catch(err => {
-                        console.error("AJAX Error caught: ", err);
-                        alert('Communication failure handling server response components.');
-                    });
-                }
-            });
-        }
-    });
+                fetch('index.php?controller=invoice&action=cancel&id=' + orderId, {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        
+                        document.querySelector('.container').innerHTML = `
+                            <h2 style="color: #d90429; margin-bottom: 15px;">Order Deleted</h2>
+                            <p style="margin-bottom: 25px; line-height: 1.6;">Your temporary checkout session has been cleared. <strong>Order #${orderId}</strong> was completely removed from the system.</p>
+                            <a href="index.php?controller=cars" class="btn-pay" style="display: block; text-align: center; text-decoration: none; box-sizing: border-box;">Return to Car Directory</a>
+                        `;
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                })
+                .catch(err => {
+                    console.error("AJAX Error details: ", err);
+                    alert('Could not process AJAX deletion response.');
+                });
+            }
+        };
+    }
     </script>
 </body>
 </html>

@@ -37,6 +37,51 @@ function updateOrderStatus($order_id, $status, $payment_method = null) {
     return mysqli_stmt_execute($stmt);
 }
 
+function deleteOrder($order_id) {
+    global $con;
+    
+    $stmt = mysqli_prepare($con, "DELETE FROM orders WHERE id = ?");
+    
+   
+    mysqli_stmt_bind_param($stmt, "i", $order_id);
+    
+    return mysqli_stmt_execute($stmt);
+}
+
+function cancelAbandonedOrders($user_id) {
+    global $con;
+    
+
+    $stmt = mysqli_prepare($con, "UPDATE orders SET status = 'cancelled' WHERE user_id = ? AND status = 'pending'");
+    mysqli_stmt_bind_param($stmt, "i", $user_id);
+    
+    return mysqli_stmt_execute($stmt);
+}
+
+function getRentalHistoryByUserId($user_id) {
+    global $con;
+    
+    $query = "SELECT o.id, o.start_date, o.end_date, o.total_cost, o.status, c.name AS car_name, c.model 
+              FROM orders o 
+              INNER JOIN cars c ON o.car_id = c.id 
+              WHERE o.user_id = ? 
+              ORDER BY o.order_date DESC";
+              
+    $stmt = mysqli_prepare($con, $query);
+    mysqli_stmt_bind_param($stmt, "i", $user_id);
+    mysqli_stmt_execute($stmt);
+    
+    $result = mysqli_stmt_get_result($stmt);
+    $orders = [];
+    
+    
+    while ($row = mysqli_fetch_assoc($result)) {
+        $orders[] = $row;
+    }
+    
+    return $orders;
+}
+
 function getOrdersByUser($user_id) {
     global $con;
     
