@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../models/AdminDashboardModel.php';
 require_once __DIR__ . '/../models/AdminCarModel.php';
 require_once __DIR__ . '/../models/AdminMemberModel.php';
+require_once __DIR__ . '/../models/AdminOrderModel.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -12,12 +13,14 @@ class AdminController
     private $dashboardModel;
     private $carModel;
     private $memberModel;
+    private $orderModel;
 
     public function __construct()
     {
         $this->dashboardModel = new AdminDashboardModel();
         $this->carModel = new AdminCarModel();
         $this->memberModel = new AdminMemberModel();
+        $this->orderModel = new AdminOrderModel();
     }
 
     private function requireAdmin()
@@ -214,7 +217,7 @@ require_once __DIR__ . '/../views/admin/cars.php';
     }
 
     public function editCar()
-{
+    {
     $this->requireAdmin();
 
     $id = $_GET['id'] ?? null;
@@ -237,10 +240,10 @@ require_once __DIR__ . '/../views/admin/cars.php';
     $csrfToken = $this->generateCsrfToken();
 
     require_once __DIR__ . '/../views/admin/car_form.php';
-}
+    }
 
-public function updateCar()
-{
+    public function updateCar()
+    {
     $this->requireAdmin();
 
     $id = $_GET['id'] ?? null;
@@ -303,10 +306,10 @@ public function updateCar()
 
     header("Location: index.php?controller=adminCars&success=updated");
     exit();
-}
+    }
     
-   public function deleteCar()
-{
+    public function deleteCar()
+    {
     $this->requireAdmin();
 
     $id = $_GET['id'] ?? null;
@@ -345,20 +348,20 @@ public function updateCar()
 
     header("Location: index.php?controller=adminCars&success=deleted");
     exit();
-}
+    }
 
     public function members()
-{
+    {
     $this->requireAdmin();
 
     $members = $this->memberModel->getAllMembers();
     $csrfToken = $this->generateCsrfToken();
 
     require_once __DIR__ . '/../views/admin/members.php';
-}
+    }
 
-public function deleteMember()
-{
+    public function deleteMember()
+    {
     $this->requireAdmin();
 
     header('Content-Type: application/json');
@@ -414,7 +417,16 @@ public function deleteMember()
         'message' => 'Could not delete member. Please try again.'
     ]);
     exit();
-}
+    }
+
+    public function orders()
+    {
+    $this->requireAdmin();
+
+    $orders = $this->orderModel->getAllOrders();
+
+    require_once __DIR__ . '/../views/admin/orders.php';
+    }
 }
 
 $route = $_GET['controller'] ?? 'adminDashboard';
@@ -428,6 +440,10 @@ if ($action === null) {
 
         case 'adminMembers':
             $action = 'members';
+            break;
+
+        case 'adminOrders':
+            $action = 'orders';
             break;
 
         case 'adminDashboard':
@@ -468,8 +484,12 @@ switch ($action) {
     $controller->members();
     break;
 
-case 'deleteMember':
+    case 'deleteMember':
     $controller->deleteMember();
+    break;
+
+    case 'orders':
+    $controller->orders();
     break;
 
     case 'dashboard':
