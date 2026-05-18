@@ -1,17 +1,25 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+session_start();
+
+
+if (!isset($_SESSION['user_id'])) {
+    $_SESSION['user_id'] = 1; 
+    $_SESSION['user_name'] = 'Test Member';
+    $_SESSION['user_role'] = 'member';
 }
 
-$controller = isset($_GET['controller']) ? $_GET['controller'] : 'homepage';
+$controller = isset($_GET['controller']) ? $_GET['controller'] : 'cars';
+$action = isset($_GET['action']) ? $_GET['action'] : 'index';
 
-if ($controller === 'homepage') {
-    require_once __DIR__ . '/controllers/homepazeController.php';
-} elseif ($controller === 'signup') {
-    require_once __DIR__ . '/controllers/signupController.php';
-} elseif ($controller === 'blog') {
-    require_once __DIR__ . '/controllers/BlogController.php';
+if ($controller === 'cars') {
+    require_once 'controllers/carController.php';
+} elseif ($controller === 'order') {
+    require_once 'controllers/orderController.php';
+} elseif ($controller === 'invoice') {
+    require_once 'controllers/invoiceController.php';
+} elseif ($controller === 'history') {
+    require_once 'controllers/historyController.php';
 } else {
-    require_once __DIR__ . '/controllers/homepazeController.php';
+    echo "404 Not Found";
 }
 ?>
