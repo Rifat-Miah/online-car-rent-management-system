@@ -78,10 +78,17 @@
                                 <td><?php echo htmlspecialchars($car['id']); ?></td>
                                 <td>
                                     <?php if (!empty($car['image_path'])): ?>
-                                        <img class="car-thumb" src="<?php echo htmlspecialchars($car['image_path']); ?>" alt="Car Image">
-                                    <?php else: ?>
-                                        No image
-                                    <?php endif; ?>
+    <?php
+        $imagePath = $car['image_path'];
+
+        if (strpos($imagePath, 'public/') !== 0 && strpos($imagePath, 'assets/') !== 0) {
+            $imagePath = 'public/uploads/cars/' . $imagePath;
+        }
+    ?>
+    <img class="car-thumb" src="<?php echo htmlspecialchars($imagePath); ?>" alt="Car Image">
+<?php else: ?>
+    No image
+<?php endif; ?>
                                 </td>
                                 <td><?php echo htmlspecialchars($car['name']); ?></td>
                                 <td><?php echo htmlspecialchars($car['model']); ?></td>

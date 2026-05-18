@@ -96,11 +96,19 @@
     <label>Car Image</label>
 
     <?php if (!empty($car['image_path'])): ?>
-        <div class="current-image-box">
-            <p>Current Image:</p>
-            <img class="current-car-image" src="<?php echo htmlspecialchars($car['image_path']); ?>" alt="Current Car Image">
-        </div>
-    <?php endif; ?>
+    <?php
+        $currentImagePath = $car['image_path'];
+
+        if (strpos($currentImagePath, 'public/') !== 0 && strpos($currentImagePath, 'assets/') !== 0) {
+            $currentImagePath = 'public/uploads/cars/' . $currentImagePath;
+        }
+    ?>
+
+    <div class="current-image-box">
+        <p>Current Image:</p>
+        <img class="current-car-image" src="<?php echo htmlspecialchars($currentImagePath); ?>" alt="Current Car Image">
+    </div>
+<?php endif; ?>
 
     <input type="file" name="image" accept="image/jpeg,image/png">
     <small>Allowed: JPG or PNG, maximum 2MB.</small>

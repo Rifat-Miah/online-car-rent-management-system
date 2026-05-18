@@ -21,33 +21,37 @@ class AdminMemberModel
         $stmt = $this->conn->prepare($sql);
         $stmt->execute();
 
-        return $stmt->fetchAll();
+        $result = $stmt->get_result();
+        return $result->fetch_all(MYSQLI_ASSOC);
     }
 
     public function getMemberById($id)
     {
         $sql = "SELECT id, name, email, role 
                 FROM users 
-                WHERE id = :id AND role = 'member'";
+                WHERE id = ? AND role = 'member'";
 
         $stmt = $this->conn->prepare($sql);
-        $stmt->execute([
-            ':id' => $id
-        ]);
 
-        return $stmt->fetch();
+        $id = (int) $id;
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+
+        $result = $stmt->get_result();
+        return $result->fetch_assoc();
     }
 
     public function deleteMember($id)
     {
         $sql = "DELETE FROM users 
-                WHERE id = :id AND role = 'member'";
+                WHERE id = ? AND role = 'member'";
 
         $stmt = $this->conn->prepare($sql);
 
-        return $stmt->execute([
-            ':id' => $id
-        ]);
+        $id = (int) $id;
+        $stmt->bind_param("i", $id);
+
+        return $stmt->execute();
     }
 }
 ?>

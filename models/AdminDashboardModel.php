@@ -16,7 +16,9 @@ class AdminDashboardModel
         $sql = "SELECT COUNT(*) AS total FROM cars";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute();
-        return $stmt->fetch()['total'];
+
+        $result = $stmt->get_result()->fetch_assoc();
+        return $result['total'] ?? 0;
     }
 
     public function getTotalMembers()
@@ -24,7 +26,9 @@ class AdminDashboardModel
         $sql = "SELECT COUNT(*) AS total FROM users WHERE role = 'member'";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute();
-        return $stmt->fetch()['total'];
+
+        $result = $stmt->get_result()->fetch_assoc();
+        return $result['total'] ?? 0;
     }
 
     public function getTotalOrders()
@@ -32,7 +36,9 @@ class AdminDashboardModel
         $sql = "SELECT COUNT(*) AS total FROM orders";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute();
-        return $stmt->fetch()['total'];
+
+        $result = $stmt->get_result()->fetch_assoc();
+        return $result['total'] ?? 0;
     }
 
     public function getTotalBlogs()
@@ -40,7 +46,9 @@ class AdminDashboardModel
         $sql = "SELECT COUNT(*) AS total FROM blogs";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute();
-        return $stmt->fetch()['total'];
+
+        $result = $stmt->get_result()->fetch_assoc();
+        return $result['total'] ?? 0;
     }
 }
 ?>
