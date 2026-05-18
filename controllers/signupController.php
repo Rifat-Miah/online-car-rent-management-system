@@ -1,8 +1,6 @@
 <?php
 require_once __DIR__ . '/../models/database.php';
 
-$pdo = Database::getInstance()->getConnection();
-
 $error = '';
 $old = [];
 
@@ -25,18 +23,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!in_array($role, ['admin', 'member'])) {
         $error = "Invalid role selected.";
     } else {
-        $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
-        $stmt->execute([$email]);
 
-        if ($stmt->rowCount() > 0) {
+        $stmt = mysqli_prepare($con, "SELECT id FROM users WHERE email = ?");
+        mysqli_stmt_bind_param($stmt, "s", $email);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_store_result($stmt);
+
+        if (mysqli_stmt_num_rows($stmt) > 0) {
             $error = "Email already registered. Please use another.";
         } else {
             $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
 
-            $stmt = $pdo->prepare("INSERT INTO users (name, email, password_hash, address, phone, role) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$name, $email, $hashedPassword, $address, $phone, $role]);
+            $stmt = mysqli_prepare($con, "INSERT INTO users (name, email, password_hash, address, phone, role) VALUES (?, ?, ?, ?, ?, ?)");
+            mysqli_stmt_bind_param($stmt, "ssssss", $name, $email, $hashedPassword, $address, $phone, $role);
+            mysqli_stmt_execute($stmt);
 
-            header("Location: index.php?controller=login&registered=1");
+           if ($role === 'admin') {
+              header("Location: index.php?controller=adminLogin&registered=1");
+           } else {
+               header("Location: index.php?controller=login&registered=1");
+               }
             exit();
         }
     }
