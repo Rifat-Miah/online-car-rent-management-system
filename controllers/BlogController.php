@@ -1,8 +1,8 @@
 <?php
-// Start session only if not already started
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+
 require_once __DIR__ . '/../models/Blog.php';
 
 class BlogController {
@@ -18,7 +18,6 @@ class BlogController {
         $limit = 4;
         $offset = ($page - 1) * $limit;
         
-        // Get data from model with search
         $posts = $this->blogModel->getAllPosts($limit, $offset, $search);
         $totalPosts = $this->blogModel->getTotalCount($search);
         $totalPages = ($totalPosts > 0) ? ceil($totalPosts / $limit) : 1;
@@ -28,7 +27,6 @@ class BlogController {
         $totalReads = $this->blogModel->getTotalReads();
         $popularPosts = $this->blogModel->getPopularPosts(3);
         
-        // Make sure variables are set (CRITICAL FIX)
         $posts = is_array($posts) ? $posts : [];
         $totalPosts = is_numeric($totalPosts) ? $totalPosts : 0;
         $totalPages = is_numeric($totalPages) ? $totalPages : 1;
@@ -38,7 +36,6 @@ class BlogController {
         $popularPosts = is_array($popularPosts) ? $popularPosts : [];
         $page = is_numeric($page) ? $page : 1;
         
-        // Include the view (variables will be available in the view)
         include_once __DIR__ . '/../views/blog/index.php';
     }
     
@@ -50,7 +47,6 @@ class BlogController {
             exit;
         }
         
-        // This will increment read count
         $post = $this->blogModel->getPostById($postId);
         
         if (!$post) {
@@ -58,21 +54,17 @@ class BlogController {
             exit;
         }
         
-        // Include the blog details view
         include_once __DIR__ . '/../views/blog/blogDetails.php';
     }
     
     public function getPosts() {
         header('Content-Type: application/json');
         
-        // Get parameters from GET request
         $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
         $search = isset($_GET['search']) ? trim($_GET['search']) : '';
-        
         $limit = 4;
         $offset = ($page - 1) * $limit;
         
-        // Get posts with search filter
         $posts = $this->blogModel->getAllPosts($limit, $offset, $search);
         $totalPosts = $this->blogModel->getTotalCount($search);
         $totalPages = ($totalPosts > 0) ? ceil($totalPosts / $limit) : 1;
@@ -112,7 +104,6 @@ class BlogController {
     public function create() {
         header('Content-Type: application/json');
         
-        // Check if user is logged in
         if (!isset($_SESSION['user_id'])) {
             echo json_encode(['success' => false, 'message' => 'Please login to create a post']);
             exit;
@@ -121,7 +112,6 @@ class BlogController {
         $title = trim($_POST['title'] ?? '');
         $content = trim($_POST['content'] ?? '');
         
-        // Server-side validation
         $errors = [];
         
         if (empty($title)) {
@@ -143,18 +133,15 @@ class BlogController {
             exit;
         }
         
-        // XSS protection
         $title = htmlspecialchars($title, ENT_QUOTES, 'UTF-8');
         $content = htmlspecialchars($content, ENT_QUOTES, 'UTF-8');
         
-        // Create the post
         $postId = $this->blogModel->createPost($_SESSION['user_id'], $title, $content);
         
         if ($postId) {
-            // Handle image upload if present
             if (isset($_FILES['cover_image']) && $_FILES['cover_image']['error'] === UPLOAD_ERR_OK) {
                 $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
-                $maxFileSize = 5 * 1024 * 1024; // 5MB
+                $maxFileSize = 5 * 1024 * 1024;
                 
                 $fileInfo = pathinfo($_FILES['cover_image']['name']);
                 $extension = strtolower($fileInfo['extension']);
@@ -164,7 +151,6 @@ class BlogController {
                 }
             }
             
-            // Get updated stats
             $postCount = $this->blogModel->getPostCount();
             $authorCount = $this->blogModel->getAuthorCount();
             $totalReads = $this->blogModel->getTotalReads();
@@ -186,7 +172,6 @@ class BlogController {
     public function delete() {
         header('Content-Type: application/json');
         
-        // Check if user is logged in
         if (!isset($_SESSION['user_id'])) {
             echo json_encode(['success' => false, 'message' => 'Please login to delete posts']);
             exit;
@@ -206,7 +191,6 @@ class BlogController {
             exit;
         }
         
-        // Role-based delete: Admin can delete any post, users can only delete their own
         $isAdmin = isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin';
         $isOwner = $post['user_id'] == $_SESSION['user_id'];
         
@@ -216,7 +200,6 @@ class BlogController {
         }
         
         if ($this->blogModel->deletePost($postId, $isAdmin ? null : $_SESSION['user_id'])) {
-            // Get updated stats
             $postCount = $this->blogModel->getPostCount();
             $authorCount = $this->blogModel->getAuthorCount();
             $totalReads = $this->blogModel->getTotalReads();
@@ -251,7 +234,6 @@ class BlogController {
     }
 }
 
-// Route handling
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'POST') {

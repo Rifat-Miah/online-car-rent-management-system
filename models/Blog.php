@@ -5,7 +5,7 @@ class Blog {
     private $db;
     
     public function __construct() {
-        $this->db = connectDB(); // Using MySQLi connection
+        $this->db = connectDB();
     }
     
     public function getAllPosts($limit = null, $offset = null, $search = '') {
@@ -136,7 +136,6 @@ class Blog {
             $posts[] = $row;
         }
         
-        // Sort by read count descending
         usort($posts, function($a, $b) {
             return $b['read_count'] - $a['read_count'];
         });
