@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     setcookie('remember_token', $token, time() + (30 * 24 * 60 * 60), '/');
                 }
 
-                header("Location: index.php?controller=userDashboard");
+                header("Location: index.php?controller=userProfile");
                 exit();
             }
 
